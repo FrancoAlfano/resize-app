@@ -1,55 +1,69 @@
-import socketserver
-import threading
-import os
+import multiprocessing
 from PIL import Image
+import threading
+import socket
+import io
 
-def process_image(image_data, output_folder):
+process_count = 0
+
+def process_image(data, output_size):
+    image = Image.open(io.BytesIO(data))
+    resized_image = image.resize(output_size)
+    buffer = io.BytesIO()
+    resized_image.save(buffer, format='JPEG')
+    print('Image processed')
+    return buffer.getvalue()
+
+def handle_client(connection, process_counter):
+    global process_count
     try:
-        if image_data:
-            image_path = os.path.join(output_folder, "temp_image.png")
-            with open(image_path, "wb") as f:
-                f.write(image_data)
+        received_data = b''
+        while True:
+            part = connection.recv(4096)
+            if not part:
+                break
+            received_data += part
 
-            if os.path.exists(image_path):
-                print("Image file saved successfully:", image_path)
+        if not received_data:
+            print("No data received")
+            return
 
-                img = Image.open(image_path)
-                img = img.resize((300, 300))
-                output_path = os.path.join(output_folder, "processed_image.png")
-                img.save(output_path)
+        output_size = (1024, 768)
 
-                return output_path
-            else:
-                print("Error: Image file not saved")
-                return None
-        else:
-            print("Error: No image data received")
-            return None
+        process = multiprocessing.Process(target=process_image, args=(received_data, output_size))
+        process.start()
+        process.join()
+
+        with process_counter.get_lock():
+            process_counter.value += 1
+            process_count = process_counter.value
+
+        processed_image = process_image(received_data, output_size)
+        connection.sendall(processed_image)
 
     except Exception as e:
-        print("Error processing image:", e)
-        return None
+        print(f"Error handling client: {e}")
+    finally:
+        connection.close()
+        print(f"Total processes created: {process_count}")
 
-class TCPHandler(socketserver.BaseRequestHandler):
-    def handle(self):
-        image_data = b""
+def start_server(host='127.0.0.1', port=8080):
+    server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server_socket.bind((host, port))
+    server_socket.listen(5)
+    process_counter = multiprocessing.Value('i', 0)
+
+    print(f"Server listening on {host}:{port}")
+
+    try:
         while True:
-            data = self.request.recv(1024)
-            if not data:
-                break
-            image_data += data
+            client_socket, _ = server_socket.accept()
+            client_thread = threading.Thread(target=handle_client, args=(client_socket, process_counter))
+            client_thread.start()
+    except KeyboardInterrupt:
+        print("Server is shutting down")
+    finally:
+        server_socket.close()
 
-        output_folder = "images"
-        os.makedirs(output_folder, exist_ok=True)
-
-        thread = threading.Thread(target=process_image, args=(image_data, output_folder))
-        thread.start()
-        thread.join()
-
-        self.request.sendall(b"Image processed and saved successfully")
-
-HOST, PORT = "localhost", 9999
-
-with socketserver.ThreadingTCPServer((HOST, PORT), TCPHandler) as server:
-    print("Server started")
-    server.serve_forever()
+if __name__ == '__main__':
+    start_server()
