@@ -1,52 +1,72 @@
-from tkinter import filedialog, Label, Button
-import tkinter as tk
-import socket
+from tkinter import Tk, Label, Button, filedialog, messagebox
 from PIL import Image, ImageTk
+import socket
+import io
 
-def send_image(image_path, server_host, server_port):
-    try:
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client_socket:
-            client_socket.connect((server_host, server_port))
+def send_image_to_server(image_path):
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+        sock.connect(('127.0.0.1', 8080))
+        with open(image_path, 'rb') as f:
+            bytes_read = f.read(1024)
+            while bytes_read:
+                sock.sendall(bytes_read)
+                bytes_read = f.read(1024)
 
-            with open(image_path, "rb") as f:
-                image_data = f.read()
+        sock.shutdown(socket.SHUT_WR)
 
-            client_socket.sendall(image_data)
+        received_data = b''
+        while True:
+            part = sock.recv(1024)
+            if not part:
+                break
+            received_data += part
 
-            response = client_socket.recv(1024)
-            print("Server response:", response.decode())
+        return received_data
 
-    except Exception as e:
-        print("Error:", e)
+def select_images():
+    file_paths = filedialog.askopenfilenames()
+    if file_paths:
+        global selected_image_paths
+        selected_image_paths = file_paths
+        image = Image.open(file_paths[0])
+        preview_image = image.resize((300, 300), Image.ANTIALIAS)
+        photo = ImageTk.PhotoImage(preview_image)
+        label.config(image=photo)
+        label.image = photo
 
-def choose_image():
-    filename = filedialog.askopenfilename()
-    if filename:
-        img = Image.open(filename)
-        img = img.resize((300, 300))
-        photo = ImageTk.PhotoImage(img)
-        img_preview.config(image=photo)
-        img_preview.image = photo
-        img_path.set(filename)
+def process_images():
+    if selected_image_paths:
+        for image_path in selected_image_paths:
+            image_data = send_image_to_server(image_path)
+            image = Image.open(io.BytesIO(image_data))
+            photo = ImageTk.PhotoImage(image)
+            label.config(image=photo)
+            label.image = photo
+            root.update()
+    else:
+        messagebox.showerror("Error", "No images selected")
 
-def process_image():
-    image_path = img_path.get()
-    if image_path:
-        send_image(image_path, "localhost", 9999)
-
-root = tk.Tk()
+root = Tk()
 root.title("Resize-app")
-root.geometry("800x800")
+root.geometry("1000x1000")
 
-img_preview = Label(root)
-img_preview.pack()
+window_width = 1000
+window_height = 1000
+screen_width = root.winfo_screenwidth()
+screen_height = root.winfo_screenheight()
+center_x = int(screen_width / 2 - window_width / 2)
+center_y = int(screen_height / 2 - window_height / 2)
+root.geometry(f"{window_width}x{window_height}+{center_x}+{center_y}")
 
-btn_choose_image = Button(root, text="Choose Image", command=choose_image)
-btn_choose_image.pack()
+label = Label(root)
+label.pack()
 
-img_path = tk.StringVar()
+button_select = Button(root, text="Select Images", command=select_images)
+button_select.pack()
 
-btn_process_image = Button(root, text="Process Image", command=process_image)
-btn_process_image.pack()
+button_process = Button(root, text="Process Images", command=process_images)
+button_process.pack()
+
+selected_image_paths = []
 
 root.mainloop()
