@@ -1,44 +1,50 @@
 import socketserver
 import threading
 import os
-from PIL import Image, ImageFilter, ImageEnhance
+from PIL import Image
 
-def process_image(image_path='/home/franco/Downloads/mario/mario.jpg', output_folder='.', custom_size=None, filter_type=None, overlay_image=None, transparency=None):
-    img = Image.open(image_path)
+def process_image(image_data, output_folder):
+    try:
+        if image_data:
+            image_path = os.path.join(output_folder, "temp_image.png")
+            with open(image_path, "wb") as f:
+                f.write(image_data)
 
-    if custom_size:
-        width, height = custom_size
-        img = img.resize((width, height), Image.ANTIALIAS)
+            if os.path.exists(image_path):
+                print("Image file saved successfully:", image_path)
 
-    if filter_type:
-        if filter_type == "blur":
-            img = img.filter(ImageFilter.BLUR)
-        elif filter_type == "grayscale":
-            img = img.convert("L")
+                img = Image.open(image_path)
+                img = img.resize((300, 300))
+                output_path = os.path.join(output_folder, "processed_image.png")
+                img.save(output_path)
 
-    if overlay_image:
-        overlay = Image.open(overlay_image)
-        if transparency is not None:
-            overlay = overlay.convert("RGBA")
-            overlay = ImageEnhance.Brightness(overlay).enhance(transparency)
-        img.paste(overlay, (0, 0), overlay)
+                return output_path
+            else:
+                print("Error: Image file not saved")
+                return None
+        else:
+            print("Error: No image data received")
+            return None
 
-    output_path = os.path.join(output_folder, f"{img.width}x{img.height}_processed.png")
-    img.save(output_path)
-    return output_path
+    except Exception as e:
+        print("Error processing image:", e)
+        return None
 
 class TCPHandler(socketserver.BaseRequestHandler):
     def handle(self):
-        image_data = self.request.recv(1024).strip()  # Receive image data
-        image_path = "temp.png"
-        with open(image_path, "wb") as f:
-            f.write(image_data)
+        image_data = b""
+        while True:
+            data = self.request.recv(1024)
+            if not data:
+                break
+            image_data += data
 
         output_folder = "images"
         os.makedirs(output_folder, exist_ok=True)
 
-        thread = threading.Thread(target=process_image, args=(image_path, output_folder))
+        thread = threading.Thread(target=process_image, args=(image_data, output_folder))
         thread.start()
+        thread.join()
 
         self.request.sendall(b"Image processed and saved successfully")
 

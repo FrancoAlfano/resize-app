@@ -1,58 +1,52 @@
-import os
+from tkinter import filedialog, Label, Button
 import tkinter as tk
-from tkinter import filedialog
-from PIL import Image, ImageFilter, ImageEnhance, ImageTk
+import socket
+from PIL import Image, ImageTk
 
-def load_image():
+def send_image(image_path, server_host, server_port):
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client_socket:
+            client_socket.connect((server_host, server_port))
+
+            with open(image_path, "rb") as f:
+                image_data = f.read()
+
+            client_socket.sendall(image_data)
+
+            response = client_socket.recv(1024)
+            print("Server response:", response.decode())
+
+    except Exception as e:
+        print("Error:", e)
+
+def choose_image():
     filename = filedialog.askopenfilename()
     if filename:
         img = Image.open(filename)
         img = img.resize((300, 300))
         photo = ImageTk.PhotoImage(img)
-        label_img.config(image=photo)
-        label_img.image = photo
-        global image_path
-        image_path = filename
+        img_preview.config(image=photo)
+        img_preview.image = photo
+        img_path.set(filename)
 
-def process_image(image_path='/home/franco/Downloads/mario/mario.jpg', output_folder='.', custom_size=None, filter_type=None, overlay_image=None, transparency=100):
-    img = Image.open(image_path)
-    print('processing')
-    print(img.width, img.height)
-
-    if custom_size:
-        width, height = custom_size
-        img = img.resize((width, height), Image.ANTIALIAS)
-
-    if filter_type:
-        if filter_type == "blur":
-            img = img.filter(ImageFilter.BLUR)
-        elif filter_type == "grayscale":
-            img = img.convert("L")
-
-    if overlay_image:
-        overlay = Image.open(overlay_image)
-        if transparency is not None:
-            overlay = overlay.convert("RGBA")
-            overlay = ImageEnhance.Brightness(overlay).enhance(transparency)
-        img.paste(overlay, (0, 0), overlay)
-
-    output_path = os.path.join(output_folder, f"{img.width}x{img.height}_processed.png")
-    img.save(output_path)
-    print('saved')
-    return output_path
+def process_image():
+    image_path = img_path.get()
+    if image_path:
+        send_image(image_path, "localhost", 9999)
 
 root = tk.Tk()
 root.title("Resize-app")
+root.geometry("800x800")
 
-btn_load = tk.Button(root, text="Load Image", command=load_image)
-btn_load.pack()
+img_preview = Label(root)
+img_preview.pack()
 
-label_img = tk.Label(root)
-label_img.pack()
+btn_choose_image = Button(root, text="Choose Image", command=choose_image)
+btn_choose_image.pack()
 
-btn_process = tk.Button(root, text="Process Image", command=process_image())
-btn_process.pack()
+img_path = tk.StringVar()
 
-image_path = None
+btn_process_image = Button(root, text="Process Image", command=process_image)
+btn_process_image.pack()
 
 root.mainloop()
