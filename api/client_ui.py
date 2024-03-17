@@ -46,7 +46,8 @@ def update_ui(image_data, image_path):
     title = os.path.basename(image_path)
     Label(frame, text=title).pack(side="left")
 
-    Button(frame, text="Download", command=lambda data=image_data: download_image(data)).pack(side="right")
+    download_button = Button(frame, text="Download", command=lambda: download_image(image_data, image_path))
+    download_button.pack(side="right")
 
     canvas.configure(scrollregion=canvas.bbox("all"))
 
@@ -85,8 +86,14 @@ def select_images():
             title_label.pack()
 
 
-def download_image(image_data):
-    save_path = filedialog.asksaveasfilename(defaultextension=".jpg", filetypes=[("JPEG images", "*.jpg")])
+def download_image(image_data, image_path):
+    original_extension = os.path.splitext(image_path)[1]
+    filetypes = [("Image files", f"*{original_extension}"), ("All files", "*.*")]
+
+    save_path = filedialog.asksaveasfilename(
+        defaultextension=original_extension,
+        filetypes=filetypes
+    )
     if save_path:
         with open(save_path, "wb") as f:
             f.write(image_data)

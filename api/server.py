@@ -7,7 +7,8 @@ def process_image(data, output_size):
     image = Image.open(io.BytesIO(data))
     resized_image = image.resize(output_size)
     buffer = io.BytesIO()
-    resized_image.save(buffer, format='JPEG')
+    format = image.format if image.format else 'JPEG'
+    resized_image.save(buffer, format)
     return buffer.getvalue()
 
 async def handle_client(reader, writer):
@@ -23,7 +24,7 @@ async def handle_client(reader, writer):
         writer.close()
         return
 
-    output_size = (1024, 768)
+    output_size = (300, 300)
 
     loop = asyncio.get_running_loop()
     with concurrent.futures.ProcessPoolExecutor() as pool:
