@@ -87,10 +87,16 @@ def select_images():
 
 
 def download_image(image_data, image_path):
-    original_extension = os.path.splitext(image_path)[1]
+    original_name, original_extension = os.path.splitext(os.path.basename(image_path))
+    image = Image.open(io.BytesIO(image_data))
+    new_size = f"{image.width}x{image.height}"
+
+    new_file_name = f"{original_name}_{new_size}{original_extension}"
+
     filetypes = [("Image files", f"*{original_extension}"), ("All files", "*.*")]
 
     save_path = filedialog.asksaveasfilename(
+        initialfile=new_file_name,
         defaultextension=original_extension,
         filetypes=filetypes
     )
