@@ -13,28 +13,33 @@ def process_image(data, output_size):
 
 async def handle_client(reader, writer):
     data = b''
-    while True:
-        part = await reader.read(4096)
-        if not part:
-            break
-        data += part
+    try:
+        while True:
+            part = await reader.read(4096)
+            if not part:
+                break
+            data += part
 
-    if not data:
-        print("No data received")
+        if not data:
+            print("No data received")
+            writer.close()
+            return
+
+        output_size = (300, 300)
+
+        loop = asyncio.get_running_loop()
+        with concurrent.futures.ProcessPoolExecutor() as pool:
+            processed_image = await loop.run_in_executor(
+                pool, process_image, data, output_size
+            )
+
+        writer.write(processed_image)
+        await writer.drain()
         writer.close()
-        return
+    except Exception as e:
+        print(f"Error processing image: {e}")
+        writer.close()
 
-    output_size = (300, 300)
-
-    loop = asyncio.get_running_loop()
-    with concurrent.futures.ProcessPoolExecutor() as pool:
-        processed_image = await loop.run_in_executor(
-            pool, process_image, data, output_size
-        )
-
-    writer.write(processed_image)
-    await writer.drain()
-    writer.close()
 
 
 async def main(host='127.0.0.1', port=8080):

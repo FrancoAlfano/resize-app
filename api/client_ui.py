@@ -10,16 +10,16 @@ def send_image_to_server(image_path, callback):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
             sock.connect(('127.0.0.1', 8080))
             with open(image_path, 'rb') as f:
-                bytes_read = f.read(1024)
+                bytes_read = f.read(10024)
                 while bytes_read:
                     sock.sendall(bytes_read)
-                    bytes_read = f.read(1024)
+                    bytes_read = f.read(10024)
 
             sock.shutdown(socket.SHUT_WR)
 
             received_data = b''
             while True:
-                part = sock.recv(1024)
+                part = sock.recv(10024)
                 if not part:
                     break
                 received_data += part
@@ -106,7 +106,7 @@ def download_image(image_data, image_path):
 
 root = Tk()
 root.title("Resize-app")
-root.geometry("1000x1000")
+root.geometry("1500x1500")
 
 selected_image_paths = []
 
