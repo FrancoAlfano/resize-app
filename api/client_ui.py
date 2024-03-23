@@ -108,10 +108,20 @@ def download_image(image_data, image_path):
             f.write(image_data)
 
 def get_selected_size():
-    selected_label = selected_option.get()
-    for label, size in standard_sizes:
-        if label == selected_label:
-            return size
+    width = width_entry.get()
+    height = height_entry.get()
+
+    if width and height:
+        width = int(width)
+        height = int(height)
+
+        selected_size = f"{width}x{height}"
+        return selected_size
+    else:
+        selected_label = selected_option.get()
+        for label, size in standard_sizes:
+            if label == selected_label:
+                return size
     return None
 
 root = Tk()
@@ -151,5 +161,23 @@ selected_option = tk.StringVar(value=standard_sizes[0][0])
 
 size_menu = tk.OptionMenu(root, selected_option, *[label for label, size in standard_sizes])
 size_menu.pack()
+
+custom_size_frame = tk.Frame(root)
+custom_size_frame.pack(fill=tk.X, padx=10, pady=5)
+
+custom_size_label = tk.Label(custom_size_frame, text="Custom Size:")
+custom_size_label.pack(side=tk.LEFT)
+
+width_label = tk.Label(custom_size_frame, text="Width:")
+width_label.pack(side=tk.LEFT)
+
+width_entry = tk.Entry(custom_size_frame, width=5)
+width_entry.pack(side=tk.LEFT, padx=(0, 10))
+
+height_label = tk.Label(custom_size_frame, text="Height:")
+height_label.pack(side=tk.LEFT)
+
+height_entry = tk.Entry(custom_size_frame, width=5)
+height_entry.pack(side=tk.LEFT)
 
 root.mainloop()
