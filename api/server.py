@@ -12,6 +12,10 @@ def process_image(data, output_size):
     return buffer.getvalue()
 
 async def handle_client(reader, writer):
+    size_header = await reader.readline()
+    selected_size_str = size_header.decode().strip()
+    selected_size = tuple(map(int, selected_size_str.split('x')))
+
     data = b''
     try:
         while True:
@@ -25,12 +29,10 @@ async def handle_client(reader, writer):
             writer.close()
             return
 
-        output_size = (300, 300)
-
         loop = asyncio.get_running_loop()
         with concurrent.futures.ProcessPoolExecutor() as pool:
             processed_image = await loop.run_in_executor(
-                pool, process_image, data, output_size
+                pool, process_image, data, selected_size
             )
 
         writer.write(processed_image)

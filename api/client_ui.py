@@ -1,4 +1,5 @@
-from tkinter import Tk, Label, Button, filedialog, messagebox, Scrollbar, Frame, Canvas
+from tkinter import Tk, Label, Button, filedialog, messagebox, Scrollbar, Frame, Canvas, ttk
+import tkinter as tk
 from PIL import Image, ImageTk
 import threading
 import socket
@@ -9,6 +10,8 @@ def send_image_to_server(image_path, callback):
     def thread_target():
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
             sock.connect(('127.0.0.1', 8080))
+            selected_size_str = get_selected_size() + '\n'
+            sock.sendall(selected_size_str.encode())
             with open(image_path, 'rb') as f:
                 bytes_read = f.read(10024)
                 while bytes_read:
@@ -104,6 +107,13 @@ def download_image(image_data, image_path):
         with open(save_path, "wb") as f:
             f.write(image_data)
 
+def get_selected_size():
+    selected_label = selected_option.get()
+    for label, size in standard_sizes:
+        if label == selected_label:
+            return size
+    return None
+
 root = Tk()
 root.title("Resize-app")
 root.geometry("1500x1500")
@@ -129,5 +139,17 @@ button_select.pack()
 
 button_process = Button(root, text="Process Images", command=process_images)
 button_process.pack()
+
+standard_sizes = [
+    ("Instagram (320x320)", "320x320"),
+    ("Facebook Desktop (170x170)", "170x170"),
+    ("LinkedIn/Twitter (400x400)", "400x400"),
+    ("Pinterest (165x165)", "165x165")
+]
+
+selected_option = tk.StringVar(value=standard_sizes[0][0])
+
+size_menu = tk.OptionMenu(root, selected_option, *[label for label, size in standard_sizes])
+size_menu.pack()
 
 root.mainloop()
