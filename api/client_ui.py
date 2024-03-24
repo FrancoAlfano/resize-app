@@ -1,4 +1,4 @@
-from tkinter import Tk, Label, Button, filedialog, messagebox, Scrollbar, Frame, Canvas, ttk
+from tkinter import Tk, Label, Button, filedialog, messagebox, Scrollbar, Frame, Canvas
 import tkinter as tk
 from PIL import Image, ImageTk
 import threading
@@ -55,41 +55,52 @@ def update_ui(image_data, image_path):
     canvas.configure(scrollregion=canvas.bbox("all"))
 
 def process_images():
-    if selected_image_paths:
-        for image_path in selected_image_paths:
-            send_image_to_server(image_path, update_ui)
-    else:
+    if not selected_image_paths:
         messagebox.showerror("Error", "No images selected")
+        return
+
+    selected_size_str = get_selected_size()
+    if selected_size_str.startswith("custom:"):
+        response = messagebox.askyesnocancel("Custom Size Selected",
+                                             '''A custom size is selected,
+                                             the aspect ratio may not be maintained. Continue?''')
+        if response is not True:
+            return
+
+    for image_path in selected_image_paths:
+        send_image_to_server(image_path, update_ui)
+
 
 def select_images():
+    clear_images()
     global selected_image_paths
-    for widget in preview_frame.winfo_children():
-        widget.destroy()
-    for widget in scrollable_frame.winfo_children():
-        widget.destroy()
 
     file_paths = filedialog.askopenfilenames()
-    if file_paths:
-        selected_image_paths = file_paths
+    try:
+        if file_paths:
+            selected_image_paths = file_paths
 
-        for image_path in file_paths:
-            image = Image.open(image_path)
-            aspect_ratio = min(100 / image.width, 100 / image.height)
-            new_width = int(image.width * aspect_ratio)
-            new_height = int(image.height * aspect_ratio)
-            thumbnail = image.resize((new_width, new_height), Image.LANCZOS)
-            photo = ImageTk.PhotoImage(thumbnail)
+            for image_path in file_paths:
+                image = Image.open(image_path)
+                aspect_ratio = min(100 / image.width, 100 / image.height)
+                new_width = int(image.width * aspect_ratio)
+                new_height = int(image.height * aspect_ratio)
+                thumbnail = image.resize((new_width, new_height), Image.LANCZOS)
+                photo = ImageTk.PhotoImage(thumbnail)
 
-            frame = Frame(preview_frame)
-            frame.pack(side="left", padx=10, pady=10)
+                frame = Frame(preview_frame)
+                frame.pack(side="left", padx=10, pady=10)
 
-            label = Label(frame, image=photo)
-            label.image = photo
-            label.pack()
+                label = Label(frame, image=photo)
+                label.image = photo
+                label.pack()
 
-            title = os.path.basename(image_path)
-            title_label = Label(frame, text=title)
-            title_label.pack()
+                title = os.path.basename(image_path)
+                title_label = Label(frame, text=title)
+                title_label.pack()
+    except Exception as e:
+        selected_image_paths = []
+        messagebox.showerror("Error", f"Invalid format {e}")
 
 
 def download_image(image_data, image_path):
@@ -118,7 +129,7 @@ def get_selected_size():
         width = int(width)
         height = int(height)
 
-        selected_size = f"{width}x{height}"
+        selected_size = f"custom:{width}x{height}"
         return selected_size
     else:
         selected_label = selected_option.get()
@@ -126,6 +137,14 @@ def get_selected_size():
             if label == selected_label:
                 return size
     return None
+
+def clear_images():
+    global selected_image_paths
+    selected_image_paths = []
+    for widget in preview_frame.winfo_children():
+        widget.destroy()
+    for widget in scrollable_frame.winfo_children():
+        widget.destroy()
 
 root = Tk()
 root.title("Resize-app")
@@ -152,6 +171,9 @@ button_select.pack()
 
 button_process = Button(root, text="Process Images", command=process_images)
 button_process.pack()
+
+button_clear = Button(root, text="clear Images", command=clear_images)
+button_clear.pack()
 
 standard_sizes = [
     ("Instagram (320x320)", "320x320"),
