@@ -62,8 +62,8 @@ def process_images():
     selected_size_str = get_selected_size()
     if selected_size_str.startswith("custom:"):
         response = messagebox.askyesnocancel("Custom Size Selected",
-                                             '''A custom size is selected,
-                                             the aspect ratio may not be maintained. Continue?''')
+                                        "A custom size is selected, "+
+                                        "the aspect ratio may not be maintained. Continue?")
         if response is not True:
             return
 
