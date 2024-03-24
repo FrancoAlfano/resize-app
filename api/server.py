@@ -3,9 +3,9 @@ import concurrent.futures
 from PIL import Image
 import io
 
-def process_image(data, output_size, is_custom=False):
+def process_image(data, output_size, is_exact=False):
     image = Image.open(io.BytesIO(data))
-    if not is_custom:
+    if not is_exact:
         original_aspect_ratio = image.width / image.height
         target_width, target_height = output_size
         target_aspect_ratio = target_width / target_height
@@ -31,11 +31,11 @@ async def handle_client(reader, writer):
     size_header = await reader.readline()
     selected_size_str = size_header.decode().strip()
 
-    if selected_size_str.startswith('custom:'):
-        is_custom = True
-        selected_size_str = selected_size_str.replace('custom:', '', 1)
+    if selected_size_str.startswith('exact:'):
+        is_exact = True
+        selected_size_str = selected_size_str.replace('exact:', '', 1)
     else:
-        is_custom = False
+        is_exact = False
 
     selected_size = tuple(map(int, selected_size_str.split('x')))
 
@@ -55,7 +55,7 @@ async def handle_client(reader, writer):
         loop = asyncio.get_running_loop()
         with concurrent.futures.ProcessPoolExecutor() as pool:
             processed_image = await loop.run_in_executor(
-                pool, process_image, data, selected_size, is_custom
+                pool, process_image, data, selected_size, is_exact
             )
 
         writer.write(processed_image)

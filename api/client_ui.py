@@ -1,4 +1,4 @@
-from tkinter import Tk, Label, Button, filedialog, messagebox, Scrollbar, Frame, Canvas
+from tkinter import Tk, Label, Button, filedialog, messagebox, Scrollbar, Frame, Canvas, ttk
 import tkinter as tk
 from PIL import Image, ImageTk
 import threading
@@ -60,9 +60,9 @@ def process_images():
         return
 
     selected_size_str = get_selected_size()
-    if selected_size_str.startswith("custom:"):
-        response = messagebox.askyesnocancel("Custom Size Selected",
-                                        "A custom size is selected, "+
+    if selected_size_str.startswith("exact:"):
+        response = messagebox.askyesnocancel("Exact Size Selected",
+                                        "An exact size is selected, "+
                                         "the aspect ratio may not be maintained. Continue?")
         if response is not True:
             return
@@ -80,6 +80,20 @@ def select_images():
         if file_paths:
             selected_image_paths = file_paths
 
+            for widget in preview_frame.winfo_children():
+                widget.destroy()
+
+            preview_canvas = Canvas(preview_frame, bg='#f0f0f0', height=200)
+            preview_scrollbar = Scrollbar(preview_frame,orient="horizontal", command=preview_canvas.xview)
+            preview_canvas.configure(xscrollcommand=preview_scrollbar.set)
+
+            scrollable_preview_frame = Frame(preview_canvas, bg='#f0f0f0')
+            preview_canvas.create_window((0, 0), window=scrollable_preview_frame, anchor="nw")
+
+            scrollable_preview_frame.bind("<Configure>", lambda e: preview_canvas.configure(scrollregion=preview_canvas.bbox("all")))
+            preview_scrollbar.pack(side="bottom", fill="x")
+            preview_canvas.pack(side="top", fill="both", expand=True)
+
             for image_path in file_paths:
                 image = Image.open(image_path)
                 aspect_ratio = min(100 / image.width, 100 / image.height)
@@ -88,7 +102,7 @@ def select_images():
                 thumbnail = image.resize((new_width, new_height), Image.LANCZOS)
                 photo = ImageTk.PhotoImage(thumbnail)
 
-                frame = Frame(preview_frame)
+                frame = Frame(scrollable_preview_frame)
                 frame.pack(side="left", padx=10, pady=10)
 
                 label = Label(frame, image=photo)
@@ -96,7 +110,7 @@ def select_images():
                 label.pack()
 
                 title = os.path.basename(image_path)
-                title_label = Label(frame, text=title)
+                title_label = Label(frame, text=title, bg='#f0f0f0')
                 title_label.pack()
     except Exception as e:
         selected_image_paths = []
@@ -122,14 +136,20 @@ def download_image(image_data, image_path):
             f.write(image_data)
 
 def get_selected_size():
-    width = width_entry.get()
-    height = height_entry.get()
+    exact_width = exact_width_entry.get()
+    exact_height = exact_height_entry.get()
+    custom_width = custom_width_entry.get()
+    custom_height = custom_height_entry.get()
 
-    if width and height:
-        width = int(width)
-        height = int(height)
-
-        selected_size = f"custom:{width}x{height}"
+    if exact_width and exact_height:
+        width = int(exact_width)
+        height = int(exact_height)
+        selected_size = f"exact:{width}x{height}"
+        return selected_size
+    elif custom_width and custom_height:
+        width = int(custom_width)
+        height = int(custom_height)
+        selected_size = f"{width}x{height}"
         return selected_size
     else:
         selected_label = selected_option.get()
@@ -146,15 +166,35 @@ def clear_images():
     for widget in scrollable_frame.winfo_children():
         widget.destroy()
 
+standard_sizes = [
+    ("Instagram (320x320)", "320x320"),
+    ("Facebook Desktop (170x170)", "170x170"),
+    ("LinkedIn/Twitter (400x400)", "400x400"),
+    ("Pinterest (165x165)", "165x165")
+]
+
+def apply_style():
+    style = ttk.Style()
+    style.theme_use('clam')
+
+    style.configure('TButton', font=('Arial', 10), borderwidth='4')
+    style.configure('TLabel', font=('Arial', 10), background='#f0f0f0')
+    style.configure('TEntry', font=('Arial', 10), borderwidth='2')
+    style.configure('TFrame', background='#f0f0f0')
+
+    root.option_add("*Font", "Arial 10")
+
 root = Tk()
 root.title("Resize-app")
-root.geometry("1500x1500")
+root.geometry("1000x800")
+
+apply_style()
 
 selected_image_paths = []
 
-canvas = Canvas(root)
+canvas = Canvas(root, bg='#f0f0f0')
 scrollbar = Scrollbar(root, command=canvas.yview)
-scrollable_frame = Frame(canvas)
+scrollable_frame = Frame(canvas, bg='#f0f0f0')
 
 scrollable_frame.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
 canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
@@ -163,29 +203,48 @@ canvas.configure(yscrollcommand=scrollbar.set)
 canvas.pack(side="left", fill="both", expand=True)
 scrollbar.pack(side="right", fill="y")
 
-preview_frame = Frame(root)
-preview_frame.pack()
+preview_frame = Frame(root, bg='#f0f0f0')
+preview_frame.pack(fill="x", pady=(10, 20))
 
-button_select = Button(root, text="Select Images", command=select_images)
-button_select.pack()
+button_frame = Frame(root, bg='#f0f0f0')
+button_frame.pack(pady=(0, 20))
 
-button_process = Button(root, text="Process Images", command=process_images)
-button_process.pack()
+button_select = ttk.Button(button_frame, text="Select Images", command=select_images)
+button_select.pack(side="left", padx=10)
 
-button_clear = Button(root, text="clear Images", command=clear_images)
-button_clear.pack()
+button_process = ttk.Button(button_frame, text="Process Images", command=process_images)
+button_process.pack(side="left", padx=10)
 
-standard_sizes = [
-    ("Instagram (320x320)", "320x320"),
-    ("Facebook Desktop (170x170)", "170x170"),
-    ("LinkedIn/Twitter (400x400)", "400x400"),
-    ("Pinterest (165x165)", "165x165")
-]
+button_clear = ttk.Button(button_frame, text="Clear Images", command=clear_images)
+button_clear.pack(side="left", padx=10)
+
+size_frame = Frame(root, bg='#f0f0f0')
+size_frame.pack(pady=(0, 20))
+
+size_menu_label = ttk.Label(size_frame, text="Select Size:")
+size_menu_label.pack(side="left", padx=(0, 10))
 
 selected_option = tk.StringVar(value=standard_sizes[0][0])
+size_menu = ttk.OptionMenu(size_frame, selected_option, *standard_sizes[0], *[label for label, _ in standard_sizes])
+size_menu.pack(side="left")
 
-size_menu = tk.OptionMenu(root, selected_option, *[label for label, size in standard_sizes])
-size_menu.pack()
+exact_size_frame = tk.Frame(root)
+exact_size_frame.pack(fill=tk.X, padx=10, pady=5)
+
+exact_size_label = tk.Label(exact_size_frame, text="Exact Size:")
+exact_size_label.pack(side=tk.LEFT)
+
+exact_width_label = tk.Label(exact_size_frame, text="Width:")
+exact_width_label.pack(side=tk.LEFT)
+
+exact_width_entry = tk.Entry(exact_size_frame, width=5)
+exact_width_entry.pack(side=tk.LEFT, padx=(0, 10))
+
+exact_height_label = tk.Label(exact_size_frame, text="Height:")
+exact_height_label.pack(side=tk.LEFT)
+
+exact_height_entry = tk.Entry(exact_size_frame, width=5)
+exact_height_entry.pack(side=tk.LEFT)
 
 custom_size_frame = tk.Frame(root)
 custom_size_frame.pack(fill=tk.X, padx=10, pady=5)
@@ -193,16 +252,16 @@ custom_size_frame.pack(fill=tk.X, padx=10, pady=5)
 custom_size_label = tk.Label(custom_size_frame, text="Custom Size:")
 custom_size_label.pack(side=tk.LEFT)
 
-width_label = tk.Label(custom_size_frame, text="Width:")
-width_label.pack(side=tk.LEFT)
+custom_width_label = tk.Label(custom_size_frame, text="Width:")
+custom_width_label.pack(side=tk.LEFT)
 
-width_entry = tk.Entry(custom_size_frame, width=5)
-width_entry.pack(side=tk.LEFT, padx=(0, 10))
+custom_width_entry = tk.Entry(custom_size_frame, width=5)
+custom_width_entry.pack(side=tk.LEFT, padx=(0, 10))
 
-height_label = tk.Label(custom_size_frame, text="Height:")
-height_label.pack(side=tk.LEFT)
+custom_height_label = tk.Label(custom_size_frame, text="Height:")
+custom_height_label.pack(side=tk.LEFT)
 
-height_entry = tk.Entry(custom_size_frame, width=5)
-height_entry.pack(side=tk.LEFT)
+custom_height_entry = tk.Entry(custom_size_frame, width=5)
+custom_height_entry.pack(side=tk.LEFT)
 
 root.mainloop()
