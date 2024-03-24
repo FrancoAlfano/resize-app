@@ -170,7 +170,30 @@ standard_sizes = [
     ("Instagram (320x320)", "320x320"),
     ("Facebook Desktop (170x170)", "170x170"),
     ("LinkedIn/Twitter (400x400)", "400x400"),
-    ("Pinterest (165x165)", "165x165")
+    ("Pinterest (165x165)", "165x165"),
+    ("Twitter Post (1024x512)", "1024x512"),
+    ("Facebook Post (1200x630)", "1200x630"),
+    ("Instagram Story (1080x1920)", "1080x1920"),
+    ("YouTube Thumbnail (1280x720)", "1280x720"),
+    ("LinkedIn Post Square (1200x1200)", "1200x1200"),
+    ("LinkedIn Post Portrait (1080x1350)", "1080x1350"),
+    ("Web Banner (468x60)", "468x60"),
+    ("Web Leaderboard (728x90)", "728x90"),
+    ("Medium Rectangle (300x250)", "300x250"),
+    ("Large Rectangle (336x280)", "336x280"),
+    ("Skyscraper (120x600)", "120x600"),
+    ("Smartphone (1170x2532)", "1170x2532"),
+    ("Tablet (1620x2160)", "1620x2160"),
+    ("Desktop Wallpaper HD (1920x1080)", "1920x1080"),
+    ("Desktop Wallpaper 4K (3840x2160)", "3840x2160"),
+    ("Business Card (1050x600)", "1050x600"),
+    ("Postcard (1800x1200)", "1800x1200"),
+    ("Flyer (2550x3300)", "2550x3300"),
+    ("Poster (7200x10800)", "7200x10800"),
+    ("Photography Small (640x480)", "640x480"),
+    ("Photography Medium (800x600)", "800x600"),
+    ("Photography Large (1024x768)", "1024x768"),
+    ("Full-Size (2048x1536)", "2048x1536")
 ]
 
 def apply_style():
@@ -234,8 +257,9 @@ size_frame.pack(pady=(0, 20))
 size_menu_label = ttk.Label(size_frame, text="Select Size:")
 size_menu_label.pack(side="left", padx=(0, 10))
 
-selected_option = tk.StringVar(value=standard_sizes[0][0])
-size_menu = ttk.OptionMenu(size_frame, selected_option, *standard_sizes[0], *[label for label, _ in standard_sizes])
+selected_option = tk.StringVar()
+selected_option.set("Instagram (320x320)")
+size_menu = ttk.OptionMenu(size_frame, selected_option, "Instagram (320x320)", *[label for label, _ in standard_sizes])
 size_menu.pack(side="left")
 
 exact_size_frame = tk.Frame(root)
@@ -273,5 +297,21 @@ custom_height_label.pack(side=tk.LEFT)
 
 custom_height_entry = tk.Entry(custom_size_frame, width=5)
 custom_height_entry.pack(side=tk.LEFT)
+
+info_frame = tk.Frame(root, bg='#f0f0f0')
+info_frame.pack(fill=tk.X, padx=10, pady=20)
+
+info_text = ('\n----------------------------------------INFOMATION----------------------------------------\n\n'
+             'The exact size will transform the image to those exact dimensions, '
+             'regardless of the aspect ratio.\n\n\n'
+             'The custom size will transform the image to the closest possible dimensions '
+             'while keeping the aspect ratio intact.')
+
+wrap_length = 500
+
+info_label = tk.Label(info_frame, text=info_text, font=('Helvetica', 12), wraplength=wrap_length, justify='left', bg='#f0f0f0')
+info_label.pack(side=tk.LEFT, fill=tk.X)
+
+
 
 root.mainloop()
