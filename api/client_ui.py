@@ -74,7 +74,10 @@ def select_images():
 
         for image_path in file_paths:
             image = Image.open(image_path)
-            thumbnail = image.resize((150, 150), Image.LANCZOS)
+            aspect_ratio = min(100 / image.width, 100 / image.height)
+            new_width = int(image.width * aspect_ratio)
+            new_height = int(image.height * aspect_ratio)
+            thumbnail = image.resize((new_width, new_height), Image.LANCZOS)
             photo = ImageTk.PhotoImage(thumbnail)
 
             frame = Frame(preview_frame)
