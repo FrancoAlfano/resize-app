@@ -177,12 +177,22 @@ def apply_style():
     style = ttk.Style()
     style.theme_use('clam')
 
-    style.configure('TButton', font=('Arial', 10), borderwidth='4')
-    style.configure('TLabel', font=('Arial', 10), background='#f0f0f0')
-    style.configure('TEntry', font=('Arial', 10), borderwidth='2')
+    style.configure('TButton', font=('Helvetica', 12, 'bold'), borderwidth=1, background='#005792', foreground='white')
+    style.map('TButton',
+              background=[('active', '#0073a8'), ('disabled', '#a3a3a3')],
+              foreground=[('active', 'white'), ('disabled', '#dedede')],
+              relief=[('pressed', 'sunken'), ('!pressed', 'raised')])
+
+    style.configure('TLabel', font=('Helvetica', 12, 'bold'), background='#f0f0f0', foreground='#333333')
+
+    style.configure('TEntry', font=('Helvetica', 12, 'bold'), borderwidth=1, relief="solid")
+
     style.configure('TFrame', background='#f0f0f0')
 
-    root.option_add("*Font", "Arial 10")
+    style.configure('Vertical.TScrollbar', gripcount=0, background='#005792', troughcolor='#f0f0f0', bordercolor='#005792', arrowcolor='white')
+    style.configure('Horizontal.TScrollbar', gripcount=0, background='#005792', troughcolor='#f0f0f0', bordercolor='#005792', arrowcolor='white')
+
+    root.option_add("*Font", "Helvetica 12")
 
 root = Tk()
 root.title("Resize-app")
@@ -206,17 +216,17 @@ scrollbar.pack(side="right", fill="y")
 preview_frame = Frame(root, bg='#f0f0f0')
 preview_frame.pack(fill="x", pady=(10, 20))
 
-button_frame = Frame(root, bg='#f0f0f0')
-button_frame.pack(pady=(0, 20))
+button_frame = ttk.Frame(root, padding="10", style='TFrame')
+button_frame.pack(fill='x', expand=False)
 
 button_select = ttk.Button(button_frame, text="Select Images", command=select_images)
-button_select.pack(side="left", padx=10)
+button_select.grid(row=0, column=0, padx=10, pady=10, sticky="ew")
 
 button_process = ttk.Button(button_frame, text="Process Images", command=process_images)
-button_process.pack(side="left", padx=10)
+button_process.grid(row=0, column=1, padx=10, pady=10, sticky="ew")
 
 button_clear = ttk.Button(button_frame, text="Clear Images", command=clear_images)
-button_clear.pack(side="left", padx=10)
+button_clear.grid(row=0, column=2, padx=10, pady=10, sticky="ew")
 
 size_frame = Frame(root, bg='#f0f0f0')
 size_frame.pack(pady=(0, 20))
