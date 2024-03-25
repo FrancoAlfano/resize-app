@@ -36,21 +36,27 @@ def update_ui(image_data, image_path):
         print(f"Failed to process {image_path}")
         return
 
+    max_display_size = (500, 500)
+
+    img_frame = Frame(scrollable_frame)
+    img_frame.pack(fill='x', expand=True, padx=5, pady=5)
+
     image = Image.open(io.BytesIO(image_data))
+
+    if image.size[0] > max_display_size[0] or image.size[1] > max_display_size[1]:
+        image.thumbnail(max_display_size, Image.LANCZOS)
+
     photo = ImageTk.PhotoImage(image)
 
-    frame = Frame(scrollable_frame)
-    frame.pack()
-
-    label = Label(frame, image=photo)
+    label = Label(img_frame, image=photo)
     label.image = photo
-    label.pack(side="left")
+    label.pack(side="left", padx=5, pady=5)
 
-    title = os.path.basename(image_path)
-    Label(frame, text=title).pack(side="left")
+    title_label = Label(img_frame, text=os.path.basename(image_path))
+    title_label.pack(side="top")
 
-    download_button = Button(frame, text="Download", command=lambda: download_image(image_data, image_path))
-    download_button.pack(side="right")
+    download_button = Button(img_frame, text="Download", command=lambda: download_image(image_data, image_path))
+    download_button.pack(side="bottom")
 
     canvas.configure(scrollregion=canvas.bbox("all"))
 
@@ -219,7 +225,7 @@ def apply_style():
 
 root = Tk()
 root.title("Resize-app")
-root.geometry("1000x800")
+root.geometry("1199x870")
 
 apply_style()
 
