@@ -8,8 +8,10 @@ import os
 
 def send_image_to_server(image_path, callback):
     def thread_target():
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-            sock.connect(('127.0.0.1', 8080))
+        addrinfo = socket.getaddrinfo('::1', 8080, socket.AF_UNSPEC, socket.SOCK_STREAM)
+        af, socktype, proto, sa = addrinfo[0]
+        with socket.socket(af, socktype, proto) as sock:
+            sock.connect(sa)
             selected_size_str = get_selected_size() + '\n'
             sock.sendall(selected_size_str.encode())
             with open(image_path, 'rb') as f:

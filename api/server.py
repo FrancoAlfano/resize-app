@@ -1,6 +1,7 @@
-import asyncio
 import concurrent.futures
 from PIL import Image
+import asyncio
+import socket
 import io
 
 def process_image(data, output_size, is_exact=False):
@@ -66,8 +67,9 @@ async def handle_client(reader, writer):
         writer.close()
 
 
-async def main(host='127.0.0.1', port=8080):
-    server = await asyncio.start_server(handle_client, host, port)
+async def main(host='::', port=8080):
+    server = await asyncio.start_server(
+        handle_client, host, port, family=socket.AF_INET6, flags=socket.AI_V4MAPPED)
     print(f'Server listening on {host}:{port}')
 
     async with server:
