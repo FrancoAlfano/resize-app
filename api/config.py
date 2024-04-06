@@ -1,9 +1,10 @@
 import socket
+import os
 
-HOST = '::'
+HOST = os.getenv('HOST', '0.0.0.0')
 PORT = 8080
-FAMILY = socket.AF_INET6
-FLAGS = socket.AI_V4MAPPED
+FAMILY = socket.AF_INET
+FLAGS = 0
 BUFFER_SIZE = 4096
 SERVER_ADDRESS = '::1'
 SERVER_PORT = 8080

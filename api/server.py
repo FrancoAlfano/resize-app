@@ -52,4 +52,5 @@ async def main():
         await server.serve_forever()
 
 if __name__ == '__main__':
+    print("Starting server")
     asyncio.run(main())
