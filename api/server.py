@@ -1,31 +1,7 @@
+from config import HOST, PORT, FAMILY, FLAGS, BUFFER_SIZE
+from image_processing import process_image
 import concurrent.futures
-from PIL import Image
 import asyncio
-import socket
-import io
-
-def process_image(data, output_size, is_exact=False):
-    image = Image.open(io.BytesIO(data))
-    if not is_exact:
-        original_aspect_ratio = image.width / image.height
-        target_width, target_height = output_size
-        target_aspect_ratio = target_width / target_height
-
-        if target_aspect_ratio > original_aspect_ratio:
-            new_height = target_height
-            new_width = int(new_height * original_aspect_ratio)
-        else:
-            new_width = target_width
-            new_height = int(new_width / original_aspect_ratio)
-
-        resized_image = image.resize((new_width, new_height), Image.LANCZOS)
-    else:
-        resized_image = image.resize(output_size, Image.LANCZOS)
-
-    buffer = io.BytesIO()
-    format = image.format if image.format else 'JPEG'
-    resized_image.save(buffer, format)
-    return buffer.getvalue()
 
 
 async def handle_client(reader, writer):
@@ -43,7 +19,7 @@ async def handle_client(reader, writer):
     data = b''
     try:
         while True:
-            part = await reader.read(4096)
+            part = await reader.read(BUFFER_SIZE)
             if not part:
                 break
             data += part
@@ -67,10 +43,10 @@ async def handle_client(reader, writer):
         writer.close()
 
 
-async def main(host='::', port=8080):
+async def main():
     server = await asyncio.start_server(
-        handle_client, host, port, family=socket.AF_INET6, flags=socket.AI_V4MAPPED)
-    print(f'Server listening on {host}:{port}')
+        handle_client, HOST, PORT, family=FAMILY, flags=FLAGS)
+    print(f'Server listening on {HOST}:{PORT}')
 
     async with server:
         await server.serve_forever()

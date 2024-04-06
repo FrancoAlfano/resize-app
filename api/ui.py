@@ -1,37 +1,11 @@
 from tkinter import Tk, Label, Button, filedialog, messagebox, Scrollbar, Frame, Canvas, ttk
-import tkinter as tk
+from client import send_image_to_server
+from config import STANDARD_SIZES
 from PIL import Image, ImageTk
-import threading
-import socket
-import io
+import tkinter as tk
 import os
+import io
 
-def send_image_to_server(image_path, callback):
-    def thread_target():
-        addrinfo = socket.getaddrinfo('::1', 8080, socket.AF_UNSPEC, socket.SOCK_STREAM)
-        af, socktype, proto, sa = addrinfo[0]
-        with socket.socket(af, socktype, proto) as sock:
-            sock.connect(sa)
-            selected_size_str = get_selected_size() + '\n'
-            sock.sendall(selected_size_str.encode())
-            with open(image_path, 'rb') as f:
-                bytes_read = f.read(10024)
-                while bytes_read:
-                    sock.sendall(bytes_read)
-                    bytes_read = f.read(10024)
-
-            sock.shutdown(socket.SHUT_WR)
-
-            received_data = b''
-            while True:
-                part = sock.recv(10024)
-                if not part:
-                    break
-                received_data += part
-
-            root.after(0, callback, received_data, image_path)
-
-    threading.Thread(target=thread_target).start()
 
 def update_ui(image_data, image_path):
     if not image_data:
@@ -62,6 +36,7 @@ def update_ui(image_data, image_path):
 
     canvas.configure(scrollregion=canvas.bbox("all"))
 
+
 def process_images():
     if not selected_image_paths:
         messagebox.showerror("Error", "No images selected")
@@ -76,7 +51,7 @@ def process_images():
             return
 
     for image_path in selected_image_paths:
-        send_image_to_server(image_path, update_ui)
+        send_image_to_server(image_path, update_ui, get_selected_size)
 
 
 def select_images():
@@ -143,6 +118,7 @@ def download_image(image_data, image_path):
         with open(save_path, "wb") as f:
             f.write(image_data)
 
+
 def get_selected_size():
     exact_width = exact_width_entry.get()
     exact_height = exact_height_entry.get()
@@ -161,10 +137,11 @@ def get_selected_size():
         return selected_size
     else:
         selected_label = selected_option.get()
-        for label, size in standard_sizes:
+        for label, size in STANDARD_SIZES:
             if label == selected_label:
                 return size
     return None
+
 
 def clear_images():
     global selected_image_paths
@@ -174,35 +151,6 @@ def clear_images():
     for widget in scrollable_frame.winfo_children():
         widget.destroy()
 
-standard_sizes = [
-    ("Instagram (320x320)", "320x320"),
-    ("Facebook Desktop (170x170)", "170x170"),
-    ("LinkedIn/Twitter (400x400)", "400x400"),
-    ("Pinterest (165x165)", "165x165"),
-    ("Twitter Post (1024x512)", "1024x512"),
-    ("Facebook Post (1200x630)", "1200x630"),
-    ("Instagram Story (1080x1920)", "1080x1920"),
-    ("YouTube Thumbnail (1280x720)", "1280x720"),
-    ("LinkedIn Post Square (1200x1200)", "1200x1200"),
-    ("LinkedIn Post Portrait (1080x1350)", "1080x1350"),
-    ("Web Banner (468x60)", "468x60"),
-    ("Web Leaderboard (728x90)", "728x90"),
-    ("Medium Rectangle (300x250)", "300x250"),
-    ("Large Rectangle (336x280)", "336x280"),
-    ("Skyscraper (120x600)", "120x600"),
-    ("Smartphone (1170x2532)", "1170x2532"),
-    ("Tablet (1620x2160)", "1620x2160"),
-    ("Desktop Wallpaper HD (1920x1080)", "1920x1080"),
-    ("Desktop Wallpaper 4K (3840x2160)", "3840x2160"),
-    ("Business Card (1050x600)", "1050x600"),
-    ("Postcard (1800x1200)", "1800x1200"),
-    ("Flyer (2550x3300)", "2550x3300"),
-    ("Poster (7200x10800)", "7200x10800"),
-    ("Photography Small (640x480)", "640x480"),
-    ("Photography Medium (800x600)", "800x600"),
-    ("Photography Large (1024x768)", "1024x768"),
-    ("Full-Size (2048x1536)", "2048x1536")
-]
 
 def apply_style():
     style = ttk.Style()
@@ -267,7 +215,7 @@ size_menu_label.pack(side="left", padx=(0, 10))
 
 selected_option = tk.StringVar()
 selected_option.set("Instagram (320x320)")
-size_menu = ttk.OptionMenu(size_frame, selected_option, "Instagram (320x320)", *[label for label, _ in standard_sizes])
+size_menu = ttk.OptionMenu(size_frame, selected_option, "Instagram (320x320)", *[label for label, _ in STANDARD_SIZES])
 size_menu.pack(side="left")
 
 exact_size_frame = tk.Frame(root)
