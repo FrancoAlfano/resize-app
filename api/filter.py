@@ -1,7 +1,7 @@
 from PIL import ImageEnhance, Image
 
 def apply_filter(image, color, alpha):
-    alpha = float(alpha)
+    alpha = float(alpha) / 10
 
     if image.mode == 'RGBA':
         image_rgb, image_alpha = image.convert('RGB'), image.split()[3]

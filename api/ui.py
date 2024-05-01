@@ -274,8 +274,8 @@ filter_menu.pack(side=tk.LEFT, padx=10)
 transparency_label = tk.Label(filter_frame, text="Transparency:")
 transparency_label.pack(side=tk.LEFT, padx=10)
 
-transparency_slider = tk.Scale(filter_frame, from_=0, to=1, resolution=0.1, orient=tk.HORIZONTAL)
-transparency_slider.set(1)
+transparency_slider = tk.Scale(filter_frame, from_=1, to=10, resolution=1, orient=tk.HORIZONTAL)
+transparency_slider.set(10)
 
 transparency_slider.pack(side=tk.LEFT)
 
@@ -283,10 +283,13 @@ info_frame = tk.Frame(root, bg='#f0f0f0')
 info_frame.pack(fill=tk.X, padx=10, pady=20)
 
 info_text = ('\n----------------------------------------INFOMATION----------------------------------------\n\n'
-             'The exact size will transform the image to those exact dimensions, '
+             'The Exact Size will transform the image to those exact dimensions, '
              'regardless of the aspect ratio.\n\n\n'
-             'The custom size will transform the image to the closest possible dimensions '
-             'while keeping the aspect ratio intact.')
+             'The Custom Size will transform the image to the closest possible dimensions '
+             'while keeping the aspect ratio intact.\n\n\n'
+             'The Color Filter allows you to select a color filter to apply a specific hue.\n\n\n'
+             'Transparency Slider allows you to adjust the intensity of the color,\n'
+             'from 1 (least visible) to 10 (most visible).')
 
 wrap_length = 500
 
