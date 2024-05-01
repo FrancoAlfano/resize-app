@@ -1,4 +1,4 @@
-from config import HOST, PORT, FAMILY, FLAGS, BUFFER_SIZE
+from server_config import HOST, PORT, FAMILY, FLAGS, BUFFER_SIZE
 from image_processing import process_image
 import concurrent.futures
 import asyncio

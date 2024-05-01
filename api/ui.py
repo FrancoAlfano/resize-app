@@ -1,6 +1,7 @@
 from tkinter import Tk, Label, Button, filedialog, messagebox, Scrollbar, Frame, Canvas, ttk
 from client import send_image_to_server
 from config import STANDARD_SIZES
+from filter import apply_filter
 from PIL import Image, ImageTk
 import tkinter as tk
 import os
@@ -19,6 +20,9 @@ def update_ui(image_data, image_path):
 
     image = Image.open(io.BytesIO(image_data))
 
+    if filter_var.get() != 'None':
+        image = apply_filter(image, filter_var.get().lower(), transparency_slider.get())
+
     if image.size[0] > max_display_size[0] or image.size[1] > max_display_size[1]:
         image.thumbnail(max_display_size, Image.LANCZOS)
 
@@ -31,7 +35,7 @@ def update_ui(image_data, image_path):
     title_label = Label(img_frame, text=os.path.basename(image_path))
     title_label.pack(side="top")
 
-    download_button = Button(img_frame, text="Download", command=lambda: download_image(image_data, image_path))
+    download_button = Button(img_frame, text="Download", command=lambda: download_image(image_data, image_path, filter_var.get().lower()))
     download_button.pack(side="bottom")
 
     canvas.configure(scrollregion=canvas.bbox("all"))
@@ -100,12 +104,13 @@ def select_images():
         messagebox.showerror("Error", f"Invalid format {e}")
 
 
-def download_image(image_data, image_path):
+def download_image(image_data, image_path, filter_name=None):
     original_name, original_extension = os.path.splitext(os.path.basename(image_path))
     image = Image.open(io.BytesIO(image_data))
     new_size = f"{image.width}x{image.height}"
 
-    new_file_name = f"{original_name}_{new_size}{original_extension}"
+    filter_suffix = f"_{filter_name}" if filter_name and filter_name != 'none' else ""
+    new_file_name = f"{original_name}{filter_suffix}_{new_size}{original_extension}"
 
     filetypes = [("Image files", f"*{original_extension}"), ("All files", "*.*")]
 
@@ -253,6 +258,26 @@ custom_height_label.pack(side=tk.LEFT)
 
 custom_height_entry = tk.Entry(custom_size_frame, width=5)
 custom_height_entry.pack(side=tk.LEFT)
+
+filter_frame = tk.Frame(root)
+filter_frame.pack(fill=tk.X, padx=10, pady=5)
+
+filter_label = tk.Label(filter_frame, text="Select Filter:")
+filter_label.pack(side=tk.LEFT)
+
+filter_var = tk.StringVar()
+filter_var.set("None")
+filter_options = ['None', 'Red', 'Green', 'Blue', 'Black and White']
+filter_menu = tk.OptionMenu(filter_frame, filter_var, *filter_options)
+filter_menu.pack(side=tk.LEFT, padx=10)
+
+transparency_label = tk.Label(filter_frame, text="Transparency:")
+transparency_label.pack(side=tk.LEFT, padx=10)
+
+transparency_slider = tk.Scale(filter_frame, from_=0, to=1, resolution=0.1, orient=tk.HORIZONTAL)
+transparency_slider.set(1)
+
+transparency_slider.pack(side=tk.LEFT)
 
 info_frame = tk.Frame(root, bg='#f0f0f0')
 info_frame.pack(fill=tk.X, padx=10, pady=20)
