@@ -107,6 +107,11 @@ def select_images():
 def download_image(image_data, image_path, filter_name=None):
     original_name, original_extension = os.path.splitext(os.path.basename(image_path))
     image = Image.open(io.BytesIO(image_data))
+
+    if filter_name and filter_name != 'none':
+        alpha = transparency_slider.get()
+        image = apply_filter(image, filter_name, alpha)
+
     new_size = f"{image.width}x{image.height}"
 
     filter_suffix = f"_{filter_name}" if filter_name and filter_name != 'none' else ""
@@ -120,8 +125,7 @@ def download_image(image_data, image_path, filter_name=None):
         filetypes=filetypes
     )
     if save_path:
-        with open(save_path, "wb") as f:
-            f.write(image_data)
+        image.save(save_path)
 
 
 def get_selected_size():
