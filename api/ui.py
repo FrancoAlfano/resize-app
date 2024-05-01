@@ -178,9 +178,19 @@ def apply_style():
 
     root.option_add("*Font", "Helvetica 12")
 
+def validate_input(P):
+    if P.isdigit():
+        if int(P) <= 8000:
+            return True
+        else:
+            return False
+    return not P
+
+
 root = Tk()
 root.title("Resize-app")
 root.geometry("1199x870")
+vcmd = root.register(validate_input)
 
 apply_style()
 
@@ -232,13 +242,13 @@ exact_size_label.pack(side=tk.LEFT)
 exact_width_label = tk.Label(exact_size_frame, text="Width:")
 exact_width_label.pack(side=tk.LEFT)
 
-exact_width_entry = tk.Entry(exact_size_frame, width=5)
+exact_width_entry = tk.Entry(exact_size_frame, width=5, validate='key', validatecommand=(vcmd, '%P'))
 exact_width_entry.pack(side=tk.LEFT, padx=(0, 10))
 
 exact_height_label = tk.Label(exact_size_frame, text="Height:")
 exact_height_label.pack(side=tk.LEFT)
 
-exact_height_entry = tk.Entry(exact_size_frame, width=5)
+exact_height_entry = tk.Entry(exact_size_frame, width=5, validate='key', validatecommand=(vcmd, '%P'))
 exact_height_entry.pack(side=tk.LEFT)
 
 custom_size_frame = tk.Frame(root)
@@ -250,13 +260,13 @@ custom_size_label.pack(side=tk.LEFT)
 custom_width_label = tk.Label(custom_size_frame, text="Width:")
 custom_width_label.pack(side=tk.LEFT)
 
-custom_width_entry = tk.Entry(custom_size_frame, width=5)
+custom_width_entry = tk.Entry(custom_size_frame, width=5, validate='key', validatecommand=(vcmd, '%P'))
 custom_width_entry.pack(side=tk.LEFT, padx=(0, 10))
 
 custom_height_label = tk.Label(custom_size_frame, text="Height:")
 custom_height_label.pack(side=tk.LEFT)
 
-custom_height_entry = tk.Entry(custom_size_frame, width=5)
+custom_height_entry = tk.Entry(custom_size_frame, width=5, validate='key', validatecommand=(vcmd, '%P'))
 custom_height_entry.pack(side=tk.LEFT)
 
 filter_frame = tk.Frame(root)
