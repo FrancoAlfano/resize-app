@@ -7,6 +7,10 @@ import asyncio
 async def handle_client(reader, writer):
     size_header = await reader.readline()
     selected_size_str = size_header.decode().strip()
+    filter_header = await reader.readline()
+    selected_filter_str = filter_header.decode().strip()
+    selected_alpha_header = await reader.readline()
+    selected_alpha_str = selected_alpha_header.decode().strip()
 
     if selected_size_str.startswith('exact:'):
         is_exact = True
@@ -32,7 +36,7 @@ async def handle_client(reader, writer):
         loop = asyncio.get_running_loop()
         with concurrent.futures.ProcessPoolExecutor() as pool:
             processed_image = await loop.run_in_executor(
-                pool, process_image, data, selected_size, is_exact
+                pool, process_image, data, selected_size, is_exact, selected_filter_str, selected_alpha_str
             )
 
         writer.write(processed_image)

@@ -1,7 +1,6 @@
 from tkinter import Tk, Label, Button, filedialog, messagebox, Scrollbar, Frame, Canvas, ttk
 from client import send_image_to_server
-from config import STANDARD_SIZES
-from filter import apply_filter
+from client_config import STANDARD_SIZES
 from PIL import Image, ImageTk
 import tkinter as tk
 import os
@@ -20,9 +19,6 @@ def update_ui(image_data, image_path):
 
     image = Image.open(io.BytesIO(image_data))
 
-    if filter_var.get() != 'None':
-        image = apply_filter(image, filter_var.get().lower(), transparency_slider.get())
-
     if image.size[0] > max_display_size[0] or image.size[1] > max_display_size[1]:
         image.thumbnail(max_display_size, Image.LANCZOS)
 
@@ -40,6 +36,11 @@ def update_ui(image_data, image_path):
 
     canvas.configure(scrollregion=canvas.bbox("all"))
 
+def get_selected_filter():
+    return filter_var.get().lower()
+
+def get_selected_alpha():
+    return transparency_slider.get()
 
 def process_images():
     if not selected_image_paths:
@@ -55,7 +56,7 @@ def process_images():
             return
 
     for image_path in selected_image_paths:
-        send_image_to_server(image_path, update_ui, get_selected_size)
+        send_image_to_server(image_path, update_ui, get_selected_size, get_selected_filter, get_selected_alpha)
 
 
 def select_images():
@@ -107,10 +108,6 @@ def select_images():
 def download_image(image_data, image_path, filter_name=None):
     original_name, original_extension = os.path.splitext(os.path.basename(image_path))
     image = Image.open(io.BytesIO(image_data))
-
-    if filter_name and filter_name != 'none':
-        alpha = transparency_slider.get()
-        image = apply_filter(image, filter_name, alpha)
 
     new_size = f"{image.width}x{image.height}"
 

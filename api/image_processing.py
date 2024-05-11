@@ -1,8 +1,9 @@
 from PIL import Image
+from filter import apply_filter
 import io
 
 
-def process_image(data, output_size, is_exact=False):
+def process_image(data, output_size, is_exact=False, filter=None, alpha=None):
     image = Image.open(io.BytesIO(data))
     if not is_exact:
         original_aspect_ratio = image.width / image.height
@@ -19,6 +20,9 @@ def process_image(data, output_size, is_exact=False):
         resized_image = image.resize((new_width, new_height), Image.LANCZOS)
     else:
         resized_image = image.resize(output_size, Image.LANCZOS)
+
+    if filter != 'none':
+        resized_image = apply_filter(resized_image, filter, alpha)
 
     buffer = io.BytesIO()
     format = image.format if image.format else 'JPEG'
